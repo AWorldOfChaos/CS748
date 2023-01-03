@@ -160,7 +160,8 @@ class MOSS(Algorithm):
     def give_pull(self, time):
         m = np.array([x.mean for x in self.A])[self.K]
         n = np.array(self.N)[self.K]
-        idx = np.argmax(m + np.sqrt(np.max(np.log(time / (len(self.K) * n)))))
+        z = np.array([0] * len(self.K))
+        idx = np.argmax(m + np.sqrt(np.maximum(z,np.log(time / (len(self.K) * n)))))
         return self.K[idx]
     
     def get_reward(self, arm_index, reward):
@@ -172,10 +173,10 @@ class MOSS(Algorithm):
 
 class QRM1(Algorithm):
     
-    def __init__(self, A, prob_over_arms, num_arms, horizon):
+    def __init__(self, A, prob_over_arms, rho, num_arms, horizon):
         super().__init__(num_arms, horizon)
         self.time = 1
-        self.rho = 0.5
+        self.rho = rho
         self.idx = range(num_arms)
         self.prob = prob_over_arms
         self.M = MOSS(A)
@@ -193,10 +194,10 @@ class QRM1(Algorithm):
 
 
 class QRM2(Algorithm):
-    def __init__(self, A, prob_over_arms, num_arms, horizon):
+    def __init__(self, A, prob_over_arms, alpha, num_arms, horizon):
         super().__init__(num_arms, horizon)
         self.time = 1
-        self.alpha = 0.347
+        self.alpha = alpha # 0.347
         self.idx = range(num_arms)
         self.prob = prob_over_arms
         self.M = MOSS(A)
