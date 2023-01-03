@@ -12,7 +12,7 @@ class UniformBanditArm:
         return np.random.uniform(low=self.a, high=self.b)
 
 
-class GaussiamBanditArm:
+class GaussianBanditArm:
     def __init__(self) -> None:
         self.mean = np.random.rand()
         self.variance = np.random.rand()
