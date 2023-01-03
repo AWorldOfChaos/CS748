@@ -16,7 +16,9 @@ for i in range(num_arms):
     arms.append(arm)
     m = max(m, arm.mean)
 
-alg = Thompson_Sampling(num_arms, args.horizon)
+prob = [1 / num_arms] * num_arms
+alg = QRM1(arms, prob, num_arms, args.horizon)
+# alg = UCB(num_arms,args.horizon)
 total_reward = 0
 
 for i in range(args.horizon):

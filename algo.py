@@ -151,51 +151,63 @@ class Thompson_Sampling(Algorithm):
             self.betas[arm_index] += 1
 
 class MOSS(Algorithm):
-    # https://www.di.ens.fr/willow/pdfscurrent/COLT09a.pdf
-    # https://smpybandits.github.io/docs/Policies.MOSS.html
     
-    def __init__(self, K, N):
-        self.K = K
-        self.N = N
+    def __init__(self, A):
+        self.A = A
+        self.K = []
+        self.N = [1 for _ in range(len(self.A))]
     
     def give_pull(self, time):
-        pass
+        m = np.array([x.mean for x in self.A])[self.K]
+        n = np.array(self.N)[self.K]
+        idx = np.argmax(m + np.sqrt(np.max(np.log(time / (len(self.K) * n)))))
+        return self.K[idx]
     
     def get_reward(self, arm_index, reward):
-        pass   
+        n = self.N[arm_index]
+        m = self.A[arm_index].mean
+        self.N[arm_index] = n + 1
+        self.A[arm_index].mean = (m * n + reward) / (n + 1)
 
 
 class QRM1(Algorithm):
-    # http://auai.org/uai2018/proceedings/papers/169.pdf
     
-    def __init__(self, A, arm_indexes, prob_over_arms, num_arms, horizon):
+    def __init__(self, A, prob_over_arms, num_arms, horizon):
         super().__init__(num_arms, horizon)
         self.time = 1
         self.rho = 0.5
-        self.A = A
-        self.idx = arm_indexes
+        self.idx = range(num_arms)
         self.prob = prob_over_arms
-        self.M = MOSS([],[],self.time)
+        self.M = MOSS(A)
     
     def give_pull(self):
         self.time *= 2
-        self.n = math.ceil(1 / self.rho * math.max(1,0.5 * math.log(self.rho * self.time)))
-        addn = int(self.n - len(self.K))
+        self.n = math.ceil(1 / self.rho * max(1,0.5 * math.log(self.rho * self.time)))
+        addn = int(self.n - len(self.M.K))
         arms = np.random.choice(self.idx,addn,True,self.prob)
         self.M.K.extend(arms)
-        self.M.N.extend([0 for _ in range(len(addn))])
         return self.M.give_pull(self.time)
     
     def get_reward(self, arm_index, reward):
-        return self.M.get_reward(arm_index,reward)
+        self.M.get_reward(arm_index,reward)
 
 
 class QRM2(Algorithm):
-    def __init__(self, num_arms, horizon):
+    def __init__(self, A, prob_over_arms, num_arms, horizon):
         super().__init__(num_arms, horizon)
+        self.time = 1
+        self.alpha = 0.347
+        self.idx = range(num_arms)
+        self.prob = prob_over_arms
+        self.M = MOSS(A)
     
     def give_pull(self):
-        pass
+        self.time *= 2
+        self.n = math.ceil(math.pow(self.time,self.alpha))
+        addn = int(self.n - len(self.K))
+        arms = np.random.choice(self.idx,addn,True,self.prob)
+        self.M.K.extend(arms)
+        return self.M.give_pull(self.time)
     
     def get_reward(self, arm_index, reward):
-        pass
+        self.M.get_reward(arm_index,reward)
