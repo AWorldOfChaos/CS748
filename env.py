@@ -16,11 +16,7 @@ for i in range(num_arms):
     arms.append(arm)
     m = max(m, arm.mean)
 
-rho = 0.5
-mrho = sorted([x.mean for x in arms])[int(num_arms * rho)]
-prob = [1 / num_arms] * num_arms
-alg = QRM1(arms, prob, rho, num_arms, args.horizon)
-# alg = UCB(num_arms,args.horizon)
+alg = UCB(num_arms,args.horizon)
 total_reward = 0
 
 for i in range(args.horizon):
@@ -29,4 +25,23 @@ for i in range(args.horizon):
     alg.get_reward(index, reward)
     total_reward += reward
 
-print(round(mrho - total_reward/args.horizon,2))
+print(round(m - total_reward/args.horizon,2))
+
+rho = 0.75
+mrho = sorted([x.mean for x in arms])[int(num_arms * rho)]
+prob = [1 / num_arms] * num_arms
+alg = QRM1(arms, prob, rho, num_arms, args.horizon)
+N = 0
+
+total_reward = 0
+for i in range(args.horizon):
+    # print(i)
+    if args.horizon < alg.time:
+        break
+    reward, pulls = alg.simulate()
+    if pulls > 0:
+        total_reward += reward / pulls
+    N += pulls
+# print(N)
+
+print(round(mrho - total_reward / math.log2(N),2))

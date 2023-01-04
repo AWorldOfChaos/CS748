@@ -4,7 +4,9 @@ from matplotlib import pyplot as plt
 
 ap = argparse.ArgumentParser()
 ap.add_argument('-H', '--horizon', type = str, help = 'Enter horizons (comma-separated)')
+ap.add_argument('-N', '--name', type = str, help = 'Enter plot name')
 args = ap.parse_args()
+name = args.name
 
 H = args.horizon.strip().split(',')
 R = []
@@ -14,4 +16,5 @@ for h in H:
 
 print('Generating plot')
 plt.plot(H,R)
+plt.savefig(f'{name}.png')
 plt.show()
