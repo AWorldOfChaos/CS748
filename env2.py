@@ -12,7 +12,7 @@ import numpy as np
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-T', '--horizon', type=int, help="Enter horizon")
-parser.add_argument('-S', '--seed', type=int, help="Enter seed")
+parser.add_argument('-S', '--seed', type=int, help="Enter seed", required = False, default = 100)
 args = parser.parse_args()
 
 np.random.seed(args.seed)

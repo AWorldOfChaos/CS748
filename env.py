@@ -11,7 +11,7 @@ import numpy as np
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-T', '--horizon', type=int, help="Enter horizon")
-parser.add_argument('-S', '--seed', type=int, help="Enter seed")
+parser.add_argument('-S', '--seed', type=int, help="Enter seed", required = False, default = 100)
 args = parser.parse_args()
 
 np.random.seed(args.seed)
@@ -23,21 +23,21 @@ for i in range(num_arms):
     arms.append(arm)
     m = max(m, arm.mean)
 
-alg = UCB(num_arms,args.horizon)
-total_reward = 0
+# alg = UCB(num_arms,args.horizon)
+# total_reward = 0
 
-for i in range(args.horizon):
-    index = alg.give_pull()
-    reward = arms[index].pull_arm()
-    alg.get_reward(index, reward)
-    total_reward += reward
+# for i in range(args.horizon):
+#     index = alg.give_pull()
+#     reward = arms[index].pull_arm()
+#     alg.get_reward(index, reward)
+#     total_reward += reward
 
-print(round(m - total_reward/args.horizon,2))
+# print(round(m - total_reward/args.horizon,2))
 
 rho = 0.75
 mrho = sorted([x.mean for x in arms])[int(num_arms * rho)]
 prob = [1 / num_arms] * num_arms
-alg = QRM1(arms, prob, rho, num_arms, args.horizon)
+alg = QRM2(arms, prob, rho, num_arms, args.horizon)
 N = 0
 
 total_reward = 0
