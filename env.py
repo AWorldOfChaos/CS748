@@ -1,3 +1,9 @@
+"""
+This environment is to test various algorithms in the cumulative scheme.
+Last Modified: 04-01-2023
+"""
+
+
 from bandit import *
 from algo import *
 import argparse
@@ -5,9 +11,10 @@ import numpy as np
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-T', '--horizon', type=int, help="Enter horizon")
+parser.add_argument('-S', '--seed', type=int, help="Enter seed")
 args = parser.parse_args()
 
-np.random.seed(100)
+np.random.seed(args.seed)
 num_arms = args.horizon
 arms = []
 m = 0
