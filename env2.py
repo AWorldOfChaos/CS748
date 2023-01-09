@@ -24,7 +24,7 @@ for i in range(num_arms):
     arms.append(arm)
     m = max(m, MV(arm.mean, arm.variance))
 
-alg = ExpExp(num_arms,args.horizon)
+alg = MVLCB(num_arms,args.horizon)
 mean_reward = 0
 count = 0
 var_reward = 0
