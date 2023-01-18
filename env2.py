@@ -34,7 +34,7 @@ for i in range(args.horizon):
     reward = arms[index].pull_arm()
     alg.get_reward(index, reward)
 
-    var_reward = count*(var_reward + (mean_reward - reward)/(count + 1))/(count + 1)
+    var_reward = count*(var_reward + (mean_reward - reward)**2/(count + 1))/(count + 1)
     mean_reward = (count*mean_reward + reward)/(count + 1)
     count += 1
 

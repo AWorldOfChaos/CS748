@@ -248,7 +248,7 @@ class MVLCB(Algorithm):
         self.counts[arm_index] += 1
         self.values = -1*MV(self.means, self.vars)
         rho = MV(1, 0) / MV(0, 1)
-        self.LCB_bounds = self.values - (5 + rho)*np.sqrt(math.log(1/self.delta)/2*self.counts)
+        self.LCB_bounds = self.values - (5 + rho)*np.sqrt(math.log(1/self.delta)/(2*self.counts+1e-9))
    
 
 class ExpExp(Algorithm):
