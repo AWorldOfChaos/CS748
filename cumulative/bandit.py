@@ -1,6 +1,7 @@
 import numpy as np
 import math
 
+
 class UniformBanditArm:
     def __init__(self) -> None:
         self.mean = np.random.rand()
