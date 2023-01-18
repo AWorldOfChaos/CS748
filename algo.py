@@ -219,8 +219,9 @@ class QRM2(Algorithm):
 
 
 def MV(mean, var):
-    rho = 0
-    return mean - rho*var
+    K1 = 0
+    K2 = 1
+    return K1*mean - K2*var
 
 
 class MVLCB(Algorithm):
@@ -242,11 +243,11 @@ class MVLCB(Algorithm):
     
     def get_reward(self, arm_index, reward):
         self.time += 1
-        self.vars[arm_index] = self.counts[arm_index]*(self.vars[arm_index] + (self.means[arm_index] - reward)/(self.counts[arm_index] + 1))/(self.counts[arm_index] + 1)
+        self.vars[arm_index] = self.counts[arm_index]*(self.vars[arm_index] + (self.means[arm_index] - reward)**2/(self.counts[arm_index] + 1))/(self.counts[arm_index] + 1)
         self.means[arm_index] = (self.counts[arm_index]*self.means[arm_index] + reward)/(self.counts[arm_index] + 1)
         self.counts[arm_index] += 1
         self.values = -1*MV(self.means, self.vars)
-        rho = MV(1, 0)
+        rho = MV(1, 0) / MV(0, 1)
         self.LCB_bounds = self.values - (5 + rho)*np.sqrt(math.log(1/self.delta)/2*self.counts)
    
 
