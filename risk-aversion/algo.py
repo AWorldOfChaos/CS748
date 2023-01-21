@@ -65,7 +65,7 @@ class ExpExp(Algorithm):
     def get_reward(self, arm_index, reward):
         
         self.time += 1
-        self.vars[arm_index] = self.counts[arm_index]*(self.vars[arm_index] + (self.means[arm_index] - reward)/(self.counts[arm_index] + 1))/(self.counts[arm_index] + 1)
+        self.vars[arm_index] = self.counts[arm_index]*(self.vars[arm_index] + (self.means[arm_index] - reward)**2/(self.counts[arm_index] + 1))/(self.counts[arm_index] + 1)
         self.means[arm_index] = (self.counts[arm_index]*self.means[arm_index] + reward)/(self.counts[arm_index] + 1)
         self.counts[arm_index] += 1
         self.values = MV(self.means, self.vars)
