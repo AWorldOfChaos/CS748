@@ -41,7 +41,7 @@ def run_sim(seed, horizon, algo):
         
     else:
         
-        rho = 0.75
+        rho = 0.25
         mrho = sorted([x.mean for x in arms])[int(num_arms * rho)]
         prob = [1 / num_arms] * num_arms
         alg = QRM2(arms, prob, rho, num_arms, horizon)
