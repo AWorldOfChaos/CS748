@@ -37,7 +37,7 @@ def run_sim(seed, horizon, algo):
             alg.get_reward(index, reward)
             total_reward += reward
 
-        return round(m - total_reward/horizon,2)
+        return round(horizon * m - total_reward,2)
         
     else:
         
@@ -63,7 +63,7 @@ def run_sim(seed, horizon, algo):
                 total_reward += reward
             N += pulls
 
-        return round(mrho - total_reward / N,2)
+        return round(N * mrho - total_reward,2)
 
 if __name__ == '__main__':
     seeds = np.arange(0,100)
