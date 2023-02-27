@@ -1,0 +1,73 @@
+Horizon: 1000
+Running for seed: 13
+Running for seed: 69
+Running for seed: 420
+Running for seed: 666
+Running for seed: 42
+Running for seed: 0
+Running for seed: 2012
+Running for seed: 7
+Running for seed: 747
+Running for seed: 8
+Regret: -0.08
+Horizon: 2000
+Running for seed: 13
+Running for seed: 69
+Running for seed: 420
+Running for seed: 666
+Running for seed: 42
+Running for seed: 0
+Running for seed: 2012
+Running for seed: 7
+Running for seed: 747
+Running for seed: 8
+Regret: -0.07000000000000002
+Horizon: 5000
+Running for seed: 13
+Running for seed: 69
+Running for seed: 420
+Running for seed: 666
+Running for seed: 42
+Running for seed: 0
+Running for seed: 2012
+Running for seed: 7
+Running for seed: 747
+Running for seed: 8
+Regret: -0.06699999999999999
+Horizon: 10000
+Running for seed: 13
+Running for seed: 69
+Running for seed: 420
+Running for seed: 666
+Running for seed: 42
+Running for seed: 0
+Running for seed: 2012
+Running for seed: 7
+Running for seed: 747
+Running for seed: 8
+Regret: -0.05900000000000001
+Horizon: 15000
+Running for seed: 13
+Running for seed: 69
+Running for seed: 420
+Running for seed: 666
+Running for seed: 42
+Running for seed: 0
+Running for seed: 2012
+Running for seed: 7
+Running for seed: 747
+Running for seed: 8
+Regret: -0.06200000000000001
+Horizon: 25000
+Running for seed: 13
+Running for seed: 69
+Running for seed: 420
+Running for seed: 666
+Running for seed: 42
+Running for seed: 0
+Running for seed: 2012
+Running for seed: 7
+Running for seed: 747
+Running for seed: 8
+Regret: -0.047999999999999994
+Generating plot
