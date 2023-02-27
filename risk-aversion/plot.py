@@ -10,7 +10,6 @@ sys.path.append(os.path.abspath('..'))
 
 from bandit import *
 from algo import *
-import argparse
 
 def run_sim(seed, horizon, eta, algorithm):
     np.random.seed(seed)
@@ -63,7 +62,7 @@ if __name__ == '__main__':
         plt.xlabel('Horizon')
         plt.ylabel('Mean Regret')
         plt.plot(horizon_list,regret_list,'.-',label=eta)
-    plt.title(args.algorithm)
+    plt.title('Risk Averse: ' + args.algorithm)
     plt.legend(loc='upper right')
     plt.savefig(f'{name}.png')
     plt.show()

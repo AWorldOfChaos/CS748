@@ -39,7 +39,7 @@ def run_sim(seed, horizon, eta, algo):
             alg.get_reward(index, reward)
             total_reward += reward
 
-        return round(horizon * m - total_reward,2)
+        return round(m - total_reward/horizon,2)
 
     else:
         rho = 0.75
@@ -78,7 +78,7 @@ if __name__ == '__main__':
         plt.xlabel('Horizon')
         plt.ylabel('Mean Regret')
         plt.plot(horizon_list,regret_list,'.-',label=eta)
-    plt.title(args.algorithm)
+    plt.title('Cumulative: ' + args.algorithm)
     plt.legend(loc='upper right')
     plt.savefig(f'{name}.png')
     plt.show()
