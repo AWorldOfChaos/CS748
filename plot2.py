@@ -11,25 +11,18 @@ import argparse
 
 def run_sim(seed, horizon, algorithm):
     np.random.seed(seed)
-    num_arms = 2
-    rho = 0
-    arms = []
+    num_arms = horizon
+    rho = 1
+    arms = GaussianBanditInstance2()
+    arms = [GaussianBanditArm() for i in range(num_arms)]
     m = 100
-    for i in range(num_arms):
-        arm = GaussianBanditArm()
-        if i==0:
-            arm.mean = 1
-            arm.variance = 0.05
-        else:
-            arm.mean = 0.5
-            arm.variance = 0.25
-        arms.append(arm)
+    for arm in arms:
         m = min(m, MV(arm.mean, arm.variance, rho))
 
     if algorithm == 'MVLCB':
         alg = MVLCB(num_arms,horizon,rho)
     elif algorithm == 'ExpExp':
-        alg = ExpExp(num_arms,horizon,rho)
+        alg = ExpExp(num_arms,horizon,rho,(int)(((horizon/14)**(2/3))*10))
     mean_reward = 0
     count = 0
     var_reward = 0
@@ -48,7 +41,7 @@ def run_sim(seed, horizon, algorithm):
 
 
 if __name__ == '__main__':
-    seeds = np.arange(0,100)
+    seeds = np.arange(100,350)
     ap = argparse.ArgumentParser()
     ap.add_argument('-H', '--horizon', type = str, help = 'Enter horizons (comma-separated)', required = True)
     ap.add_argument('-N', '--name', type = str, help = 'Enter plot name', required = True)
@@ -64,9 +57,20 @@ if __name__ == '__main__':
         regret_list.append(sum(regret) / len(seeds))
         print(f'Horizon: {horizon} | Regret: {regret_list[-1]}')
 
-    plt.title(args.algorithm)
     plt.xlabel('Horizon')
     plt.ylabel('Mean Regret')
-    plt.plot(horizon_list,regret_list)
+    plt.plot(horizon_list,regret_list,'.-',label=args.algorithm)
+
+    regret_list = []
+    for horizon in tqdm(horizon_list):
+        with Pool() as pool:
+            regret = pool.starmap(run_sim, zip(seeds, repeat(horizon), repeat('ExpExp')))
+        regret_list.append(sum(regret) / len(seeds))
+        print(f'Horizon: {horizon} | Regret: {regret_list[-1]}')
+
+    plt.plot(horizon_list,regret_list,'.-',label='ExpExp')
+
+    plt.title('MVLCB vs ExpExp')
+    plt.legend(loc='upper right')
     plt.savefig(f'{name}.png')
     plt.show()

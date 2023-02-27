@@ -1,6 +1,32 @@
 import numpy as np
 import math
 
+def KL(x, y):
+    if y>=1:
+        return -1
+
+    return (x+0.0001)*math.log((x+0.0001)/(y+0.0001)) + (1.0001-x)*math.log((1.0001-x)/(1.0001-y))
+
+def find_bound(value, time, count):
+    target = (math.log(time) + 3*math.log(math.log(time)))/(0.001 + count)
+    values = np.arange(value,1,0.01)
+    if value > 0.99:
+        return 1
+    low = 0
+    high = len(values) - 1
+    mid = 0
+ 
+    while low < high:
+        mid = (high + low) // 2
+
+        if KL(value, values[mid]) < target:
+            low = mid + 1
+        elif KL(value, values[mid]) > target:
+            high = mid - 1
+        else:
+            return values[mid]
+    
+    return values[low]
 
 class Algorithm:
     def __init__(self, num_arms, horizon):
@@ -33,35 +59,6 @@ class Eps_Greedy(Algorithm):
         value = self.values[arm_index]
         new_value = ((n - 1) / n) * value + (1 / n) * reward
         self.values[arm_index] = new_value
-
-
-def KL(x, y):
-    if y>=1:
-        return -1
-
-    return (x+0.0001)*math.log((x+0.0001)/(y+0.0001)) + (1.0001-x)*math.log((1.0001-x)/(1.0001-y))
-
-def find_bound(value, time, count):
-    target = (math.log(time) + 3*math.log(math.log(time)))/(0.001 + count)
-    values = np.arange(value,1,0.01)
-    if value > 0.99:
-        return 1
-    low = 0
-    high = len(values) - 1
-    mid = 0
- 
-    while low < high:
- 
-        mid = (high + low) // 2
- 
-        if KL(value, values[mid]) < target:
-            low = mid + 1
-        elif KL(value, values[mid]) > target:
-            high = mid - 1
-        else:
-            return values[mid]
-    
-    return values[low]
 
 
 class UCB(Algorithm):
@@ -135,40 +132,35 @@ class Thompson_Sampling(Algorithm):
         else:
             self.betas[arm_index] += 1
 
+
 class MOSS(Algorithm):
     
-    def __init__(self, A, K, horizon):
-        self.A = A
+    def __init__(self, K, horizon):
+        self.means = np.zeros(len(K))
+        self.counts = np.zeros(len(K))
+        self.ucb = np.ones(len(K))
         self.K = K
-        self.N = [1 for _ in range(len(self.A))]
         self.horizon = horizon
         self.time = 0
     
     def give_pull(self):
-        self.time += 1
-        m = np.array([x.mean for x in self.A])[self.K]
-        n = np.array(self.N)[self.K]
-        z = np.array([0] * len(self.K))
-        idx = np.argmax(m + np.sqrt(np.maximum(z,np.log(self.time / (len(self.K) * n)))))
-        return self.K[idx]
+        return np.argmax(self.ucb)
     
     def get_reward(self, arm_index, reward):
-        n = self.N[arm_index]
-        m = self.A[arm_index].mean
-        self.N[arm_index] = n + 1
-        self.A[arm_index].mean = (m * n + reward) / (n + 1)
+        self.time += 1
+        self.counts[arm_index] += 1
+        self.means[arm_index] = (self.means[arm_index] * self.counts[arm_index] + reward) / (self.means[arm_index] + 1)
+        self.ucb = self.means + np.sqrt(np.maximum(0, np.log(self.time / (len(self.K) * (self.counts+1e-9))))/(self.counts+1e-9))
     
     def simulate(self):
         total = 0
         for i in range(self.horizon):
-            # print(f'moss {i}')
-            if self.horizon < self.time:
-                break
             index = self.give_pull()
-            reward = self.A[index].pull_arm()
+            reward = self.K[index].pull_arm()
             self.get_reward(index,reward)
             total += reward
         return total
+
 
 class QRM1(Algorithm):
     
@@ -178,54 +170,55 @@ class QRM1(Algorithm):
         self.A = A
         self.K = []
         self.rho = rho
-        self.mrho = sorted([x.mean for x in A])[int(num_arms * rho)]
-        self.idx = range(num_arms)
+        self.idx = np.arange(num_arms)
         self.prob = prob_over_arms
         self.horizon = horizon
     
     def simulate(self):
-        self.time *= 2
-        if self.horizon < self.time:
-            return [0,0]
-        self.n = math.ceil(1 / self.rho * max(1,0.5 * math.log(self.rho * self.time)))
-        addn = int(self.n - len(self.K))
-        arms = np.random.choice(self.idx,addn,True,self.prob)
-        self.K.extend(arms)
-        M = MOSS(self.A,self.K,self.time)
-        return [M.simulate() - self.time * math.pow((1 - self.rho),self.n),self.time]
+        total_reward = 0
+        while(self.horizon>0):
+            self.time = min(2*self.time, self.horizon)
+            self.horizon -= self.time 
+            self.n = math.ceil(1 / self.rho * max(1,0.5 * math.log(self.rho * self.time)))
+            self.K = self.A[:self.n]
+            M = MOSS(self.K, self.time)
+            # reward += M.simulate() - self.time * math.pow((1 - self.rho),self.n)
+            reward = M.simulate()
+            total_reward += reward
+        return reward
 
 
 class QRM2(Algorithm):
+
     def __init__(self, A, prob_over_arms, alpha, num_arms, horizon):
         super().__init__(num_arms, horizon)
         self.time = 1
         self.A = A
         self.K = []
-        self.alpha = alpha # 0.347
-        self.idx = range(num_arms)
+        self.alpha = alpha
+        self.idx = np.arange(num_arms)
         self.prob = prob_over_arms
         self.horizon = horizon
     
     def simulate(self):
-        self.time *= 2
-        if self.horizon < self.time:
-            return [0,0]
-        self.n = math.ceil(math.pow(self.time,self.alpha))
-        addn = int(self.n - len(self.K))
-        arms = np.random.choice(self.idx,addn,True,self.prob)
-        self.K.extend(arms)
-        M = MOSS(self.A,self.K,self.time)
-        return [M.simulate() - math.pow(self.time,-self.alpha / 1.53),self.time]
+        reward = 0
+        while(self.horizon>0):
+            self.time = min(2*self.time, self.horizon)
+            self.horizon -= self.time 
+            self.n = math.ceil(math.pow(self.time,self.alpha))
+            self.K = self.A[:self.n]
+            M = MOSS(self.K, self.time)
+            # reward += M.simulate() - self.time * math.pow((1 - self.rho),self.n)
+            reward += M.simulate()
+        return reward
 
 
-def MV(mean, var):
-    K1 = 0
-    K2 = 1
-    return K1*mean - K2*var
+def MV(mean, var, rho):
+    return var - rho*mean
 
 
 class MVLCB(Algorithm):
-    def __init__(self, num_arms, horizon):
+    def __init__(self, num_arms, horizon, rho):
         super().__init__(num_arms, horizon)
         
         self.counts = np.zeros(num_arms)
@@ -235,40 +228,37 @@ class MVLCB(Algorithm):
         self.time = 0
         self.LCB_bounds = np.zeros(num_arms)
         self.delta = 0.1
-        
+        self.rho = rho        
     
     def give_pull(self):
         return np.argmin(self.LCB_bounds)
-        
     
     def get_reward(self, arm_index, reward):
         self.time += 1
         self.vars[arm_index] = self.counts[arm_index]*(self.vars[arm_index] + (self.means[arm_index] - reward)**2/(self.counts[arm_index] + 1))/(self.counts[arm_index] + 1)
         self.means[arm_index] = (self.counts[arm_index]*self.means[arm_index] + reward)/(self.counts[arm_index] + 1)
         self.counts[arm_index] += 1
-        self.values = -1*MV(self.means, self.vars)
-        rho = MV(1, 0) / MV(0, 1)
-        self.LCB_bounds = self.values - (5 + rho)*np.sqrt(math.log(1/self.delta)/(2*self.counts+1e-9))
+        self.values = MV(self.means, self.vars, self.rho)
+        self.LCB_bounds = self.values - (5 + self.rho)*np.sqrt(math.log(1/self.delta)/(2*self.counts+1e-9))
    
 
 class ExpExp(Algorithm):
-    def __init__(self, num_arms, horizon):
+    def __init__(self, num_arms, horizon, rho, tau): # tau is Exploration phase
         super().__init__(num_arms, horizon)
         
         self.counts = np.zeros(num_arms)
         self.means = np.zeros(num_arms)
         self.vars = np.zeros(num_arms)
-        self.values = np.zeros(num_arms)
+        self.values = np.ones(num_arms)
         self.time = 0
-        self.eps = 0.1
-        
+        self.tau = tau
+        self.rho = rho
     
     def give_pull(self):
-        if self.time <= self.eps * self.horizon:
+        if self.time <= self.tau:
             return np.random.randint(self.num_arms)
         else:
-            return np.argmax(self.values)
-        
+            return np.argmin(self.values)
     
     def get_reward(self, arm_index, reward):
         
@@ -276,4 +266,4 @@ class ExpExp(Algorithm):
         self.vars[arm_index] = self.counts[arm_index]*(self.vars[arm_index] + (self.means[arm_index] - reward)**2/(self.counts[arm_index] + 1))/(self.counts[arm_index] + 1)
         self.means[arm_index] = (self.counts[arm_index]*self.means[arm_index] + reward)/(self.counts[arm_index] + 1)
         self.counts[arm_index] += 1
-        self.values = MV(self.means, self.vars)
+        self.values = MV(self.means, self.vars, self.rho)
