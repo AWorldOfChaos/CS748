@@ -265,18 +265,23 @@ class ExpExp(Algorithm):
 
 class newAlgo1(Algorithm):
 
-    def __init__(self, num_arms, horizon):
+    def __init__(self, num_arms, horizon, rho):
         super().__init__(num_arms, horizon)
         self.counts = np.zeros(num_arms)
         self.means = np.zeros(num_arms)
         self.vars = np.zeros(num_arms)
         self.values = np.zeros(num_arms)
         self.time = 0
-        self.margin = MV(0.75, 0.25)
+        self.net_reward = 0
+        self.rho = rho
+        self.margin = MV(0.99, 0.01, rho)
 
     def give_pull(self):
-        if np.max(self.values) < self.margin:
-            return np.argmin(self.values)
+        if np.min(self.values) < self.margin:
+            # allowed_idx = [i for i in range(self.num_arms) if self.values[i] < self.margin]
+            # values2 = [MV(self.means[i] - self.net_reward/(self.time + 1e-5),self.vars[i],self.rho) if i in allowed_idx else 1e10 for i in range(self.num_arms)]
+            values2 = MV(self.means - self.net_reward/(self.time + 1e-5),self.vars,self.rho)
+            return np.argmin(np.array(values2))
         else:
             return np.random.randint(self.num_arms)
 
@@ -289,4 +294,5 @@ class newAlgo1(Algorithm):
             self.counts[arm_index]*self.means[arm_index] + reward
         )/(self.counts[arm_index] + 1)
         self.counts[arm_index] += 1
-        self.values = MV(self.means, self.vars)
+        self.values = MV(self.means, self.vars, self.rho)
+        self.net_reward += reward

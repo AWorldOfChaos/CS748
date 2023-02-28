@@ -14,7 +14,7 @@ from algo import *
 def run_sim(seed, horizon, eta, algorithm):
     np.random.seed(seed)
     num_arms = int(eta * horizon)
-    rho = 1
+    rho = 0.001
     arms = GaussianBanditInstance2()
     arms = [GaussianBanditArm() for i in range(num_arms)]
     m = 100
@@ -26,7 +26,7 @@ def run_sim(seed, horizon, eta, algorithm):
     elif algorithm == 'ExpExp':
         alg = ExpExp(num_arms,horizon,rho,(int)(((horizon/14)**(2/3))*10))
     elif algorithm == 'newAlgo1':
-        alg = newAlgo1(num_arms,horizon)
+        alg = newAlgo1(num_arms,horizon,rho)
 
     mean_reward = 0
     count = 0
