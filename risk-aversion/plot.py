@@ -25,6 +25,8 @@ def run_sim(seed, horizon, eta, algorithm):
         alg = MVLCB(num_arms,horizon,rho)
     elif algorithm == 'ExpExp':
         alg = ExpExp(num_arms,horizon,rho,(int)(((horizon/14)**(2/3))*10))
+    elif algorithm == 'newAlgo1':
+        alg = newAlgo1(num_arms,horizon)
 
     mean_reward = 0
     count = 0
@@ -61,8 +63,18 @@ if __name__ == '__main__':
             print(f'Horizon: {horizon} | Regret: {regret_list[-1]}')
         plt.xlabel('Horizon')
         plt.ylabel('Mean Regret')
-        plt.plot(horizon_list,regret_list,'.-',label=eta)
-    plt.title('Risk Averse: ' + args.algorithm)
+        plt.plot(horizon_list,regret_list,'.-',label=args.algorithm)
+    for eta in tqdm(eta_list):
+        regret_list = []
+        for horizon in tqdm(horizon_list):
+            with Pool() as pool:
+                regret = pool.starmap(run_sim, zip(seeds, repeat(horizon), repeat(eta), repeat('MVLCB')))
+            regret_list.append(sum(regret) / len(seeds))
+            print(f'Horizon: {horizon} | Regret: {regret_list[-1]}')
+        plt.xlabel('Horizon')
+        plt.ylabel('Mean Regret')
+        plt.plot(horizon_list,regret_list,'.-',label='MVLCB')
+    plt.title('Risk Averse: ' + args.algorithm + ' vs MVLCB')
     plt.legend(loc='upper right')
-    plt.savefig(f'{name}.png')
+    plt.savefig(f'figures/{name}.png')
     plt.show()

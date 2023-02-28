@@ -80,5 +80,5 @@ if __name__ == '__main__':
         plt.plot(horizon_list,regret_list,'.-',label=eta)
     plt.title('Cumulative: ' + args.algorithm)
     plt.legend(loc='upper right')
-    plt.savefig(f'{name}.png')
+    plt.savefig(f'figures/{name}.png')
     plt.show()

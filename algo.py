@@ -1,5 +1,5 @@
-import numpy as np
 import math
+import numpy as np
 
 def KL(x, y):
     if y>=1:
@@ -9,7 +9,6 @@ def KL(x, y):
 def find_bound(value, time, count):
     target = (math.log(time) + 3*math.log(math.log(time)))/(0.001 + count)
     values = np.arange(value,1,0.01)
-    
     if value > 0.99:
         return 1
     low = 0
@@ -169,7 +168,7 @@ class QRM1(Algorithm):
 
     def simulate(self):
         total_reward = 0
-        while(self.horizon>0):
+        while self.horizon>0:
             self.time = min(2*self.time, self.horizon)
             self.horizon -= self.time 
             self.n = math.ceil(1 / self.rho * max(1,0.5 * math.log(self.rho * self.time)))
@@ -195,7 +194,7 @@ class QRM2(Algorithm):
 
     def simulate(self):
         reward = 0
-        while(self.horizon>0):
+        while self.horizon>0:
             self.time = min(2*self.time, self.horizon)
             self.horizon -= self.time 
             self.n = math.ceil(math.pow(self.time,self.alpha))
@@ -205,7 +204,7 @@ class QRM2(Algorithm):
             reward += M.simulate()
         return reward
 
-def MV(mean, var, rho):
+def MV(mean, var, rho = 1):
     return var - rho*mean
 
 
@@ -254,7 +253,40 @@ class ExpExp(Algorithm):
 
     def get_reward(self, arm_index, reward):
         self.time += 1
-        self.vars[arm_index] = self.counts[arm_index]*(self.vars[arm_index] + (self.means[arm_index] - reward)**2/(self.counts[arm_index] + 1))/(self.counts[arm_index] + 1)
-        self.means[arm_index] = (self.counts[arm_index]*self.means[arm_index] + reward)/(self.counts[arm_index] + 1)
+        self.vars[arm_index] = self.counts[arm_index]*(
+            self.vars[arm_index] + (self.means[arm_index] - reward)**2/(self.counts[arm_index] + 1)
+        )/(self.counts[arm_index] + 1)
+        self.means[arm_index] = (
+            self.counts[arm_index]*self.means[arm_index] + reward
+        )/(self.counts[arm_index] + 1)
         self.counts[arm_index] += 1
         self.values = MV(self.means, self.vars, self.rho)
+
+
+class newAlgo1(Algorithm):
+
+    def __init__(self, num_arms, horizon):
+        super().__init__(num_arms, horizon)
+        self.counts = np.zeros(num_arms)
+        self.means = np.zeros(num_arms)
+        self.vars = np.zeros(num_arms)
+        self.values = np.zeros(num_arms)
+        self.time = 0
+        self.margin = MV(0.75, 0.25)
+
+    def give_pull(self):
+        if np.max(self.values) < self.margin:
+            return np.argmin(self.values)
+        else:
+            return np.random.randint(self.num_arms)
+
+    def get_reward(self, arm_index, reward):
+        self.time += 1
+        self.vars[arm_index] = self.counts[arm_index]*(
+            self.vars[arm_index] + (self.means[arm_index] - reward)**2/(self.counts[arm_index] + 1)
+        )/(self.counts[arm_index] + 1)
+        self.means[arm_index] = (
+            self.counts[arm_index]*self.means[arm_index] + reward
+        )/(self.counts[arm_index] + 1)
+        self.counts[arm_index] += 1
+        self.values = MV(self.means, self.vars)
