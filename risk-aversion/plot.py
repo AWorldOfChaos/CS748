@@ -25,6 +25,8 @@ def run_sim(seed, horizon, eta, algorithm):
         alg = MVLCB(num_arms,horizon,rho)
     elif algorithm == 'ExpExp':
         alg = ExpExp(num_arms,horizon,rho,(int)(((horizon/14)**(2/3))*10))
+    elif algorithm == 'newAlgo0':
+        alg = newAlgo0(num_arms,horizon,rho)
     elif algorithm == 'newAlgo1':
         alg = newAlgo1(num_arms,horizon,rho)
 

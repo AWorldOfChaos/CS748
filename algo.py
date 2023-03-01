@@ -302,6 +302,7 @@ class newAlgo1(Algorithm):
 
     def __init__(self, num_arms, horizon, rho):
         super().__init__(num_arms, horizon)
+        self.eta = num_arms/horizon
         self.counts = np.zeros(num_arms)
         self.means = np.zeros(num_arms)
         self.vars = np.zeros(num_arms)
