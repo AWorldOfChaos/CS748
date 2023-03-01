@@ -315,7 +315,10 @@ class newAlgo1(Algorithm):
         self.values = np.ones(self.num_arms)*self.margin
 
     def give_pull(self):
-        if self.times > 0 and self.times < 4:
+        bound = 3
+        if self.eta < 1:
+            bound *= (self.eta + (1 / bound))
+        if self.times > 0 and self.times < bound:
             self.times += 1
         else:
             self.times = 1

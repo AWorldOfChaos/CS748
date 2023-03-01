@@ -18,7 +18,7 @@ class GaussianBanditArm:
 
     def __init__(self) -> None:
         self.mean = np.random.rand()
-        self.variance = np.random.rand()
+        self.variance = np.random.rand() / 16
 
     def pull_arm(self):
         return np.random.normal(self.mean, math.sqrt(self.variance))
