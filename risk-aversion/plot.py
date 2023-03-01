@@ -14,7 +14,7 @@ from algo import *
 def run_sim(seed, horizon, eta, algorithm):
     np.random.seed(seed)
     num_arms = int(eta * horizon)
-    rho = 0.001
+    rho = 1
     arms = GaussianBanditInstance2()
     arms = [GaussianBanditArm() for i in range(num_arms)]
     m = 100
@@ -68,13 +68,13 @@ if __name__ == '__main__':
         regret_list = []
         for horizon in tqdm(horizon_list):
             with Pool() as pool:
-                regret = pool.starmap(run_sim, zip(seeds, repeat(horizon), repeat(eta), repeat('MVLCB')))
+                regret = pool.starmap(run_sim, zip(seeds, repeat(horizon), repeat(eta), repeat('ExpExp')))
             regret_list.append(sum(regret) / len(seeds))
             print(f'Horizon: {horizon} | Regret: {regret_list[-1]}')
         plt.xlabel('Horizon')
         plt.ylabel('Mean Regret')
-        plt.plot(horizon_list,regret_list,'.-',label='MVLCB')
-    plt.title('Risk Averse: ' + args.algorithm + ' vs MVLCB')
+        plt.plot(horizon_list,regret_list,'.-',label='ExpExp')
+    plt.title('Risk Averse: ' + args.algorithm + ' vs ExpExp')
     plt.legend(loc='upper right')
     plt.savefig(f'figures/{name}.png')
     plt.show()
