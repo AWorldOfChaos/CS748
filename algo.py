@@ -172,9 +172,8 @@ class QRM1(Algorithm):
             self.time = min(2*self.time, self.horizon)
             self.horizon -= self.time 
             self.n = math.ceil(1 / self.rho * max(1,0.5 * math.log(self.rho * self.time)))
-            self.K = self.A[:self.n]
+            self.K = np.random.choice(self.A,self.n,self.prob)
             M = MOSS(self.K, self.time)
-            # reward += M.simulate() - self.time * math.pow((1 - self.rho),self.n)
             reward = M.simulate()
             total_reward += reward
         return reward
@@ -198,9 +197,8 @@ class QRM2(Algorithm):
             self.time = min(2*self.time, self.horizon)
             self.horizon -= self.time 
             self.n = math.ceil(math.pow(self.time,self.alpha))
-            self.K = self.A[:self.n]
+            self.K = np.random.choice(self.A,self.n,self.prob)
             M = MOSS(self.K, self.time)
-            # reward += M.simulate() - self.time * math.pow((1 - self.rho),self.n)
             reward += M.simulate()
         return reward
 
@@ -306,6 +304,49 @@ class newAlgo1(Algorithm):
         self.counts = np.zeros(num_arms)
         self.means = np.zeros(num_arms)
         self.vars = np.zeros(num_arms)
+        self.time = 0
+        self.net_reward = 0
+        self.times = 0
+        self.last_pulled = -1
+        self.rho = rho
+        self.margin = MV(0.90, 0.02, rho)
+        self.values = np.ones(self.num_arms)*self.margin
+
+    def give_pull(self):
+        if self.times > 0 and self.times < 4:
+            self.times += 1
+        else:
+            self.times = 1
+            if np.min(self.values) < self.margin:
+                self.last_pulled = np.argmin(np.array(self.values))
+            else:
+                self.last_pulled = np.random.randint(self.num_arms)
+        return self.last_pulled
+
+    def get_reward(self, arm_index, reward):
+        self.time += 1
+        self.vars[arm_index] = self.counts[arm_index]*(
+            self.vars[arm_index] + (self.means[arm_index] - reward)**2/(self.counts[arm_index] + 1)
+        )/(self.counts[arm_index] + 1)
+        self.means[arm_index] = (
+            self.counts[arm_index]*self.means[arm_index] + reward
+        )/(self.counts[arm_index] + 1)
+        self.counts[arm_index] += 1
+        self.values = (MV(self.means, self.vars, self.rho) * (self.counts > 0) +
+                       np.ones(self.num_arms)*self.margin * (self.counts == 0))
+        self.net_reward += reward
+
+
+class newAlgo2(Algorithm):
+
+    def __init__(self, num_arms, horizon, rho, arms, prob):
+        super().__init__(num_arms, horizon)
+        self.eta = num_arms/horizon
+        self.counts = np.zeros(num_arms)
+        self.means = np.zeros(num_arms)
+        self.vars = np.zeros(num_arms)
+        self.arms = arms
+        self.prob = prob
         self.time = 0
         self.net_reward = 0
         self.times = 0
