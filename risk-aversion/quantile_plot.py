@@ -16,9 +16,8 @@ def run_sim(seed, horizon, eta, algorithm):
     num_arms = int(eta * horizon)
     rho = 1
     arms = [GaussianBanditArm() for i in range(num_arms)]
-    m = 100
-    for arm in arms:
-        m = min(m, MV(arm.mean, arm.variance, rho))
+    quantile = 0.9
+    m = sorted([MV(arm.mean,arm.variance,rho) for arm in arms], reverse = True)[int(num_arms * quantile)]
 
     if algorithm == 'MVLCB':
         alg = MVLCB(num_arms,horizon,rho)
@@ -30,7 +29,6 @@ def run_sim(seed, horizon, eta, algorithm):
         alg = newAlgo1(num_arms,horizon,rho)
     elif algorithm == 'newAlgo2':
         eps = 0.1
-        quantile = 0.9
         alg = newAlgo2(num_arms,horizon,rho,eps,quantile)
 
     mean_reward = 0
