@@ -14,7 +14,7 @@ from algo import *
 def run_sim(seed, horizon, eta, algorithm):
     np.random.seed(seed)
     num_arms = int(eta * horizon)
-    rho = 1
+    rho = 0
     arms = [GaussianBanditArm() for i in range(num_arms)]
     m = 100
     for arm in arms:
