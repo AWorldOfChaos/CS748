@@ -260,6 +260,37 @@ class ExpExp(Algorithm):
         self.counts[arm_index] += 1
         self.values = MV(self.means, self.vars, self.rho)
 
+class ExpExpSS(Algorithm):
+
+    def __init__(self, num_arms, horizon, rho, tau): # tau is Exploration phase
+        super().__init__(num_arms, horizon)
+        self.counts = np.zeros(num_arms)
+        self.means = np.zeros(num_arms)
+        self.vars = np.zeros(num_arms)
+        self.values = np.ones(num_arms)
+        self.time = 0
+        self.tau = tau
+        self.rho = rho
+
+    def give_pull(self):
+        if self.time <= self.tau:
+            return np.random.randint(self.num_arms)
+        else:
+            return np.argmin(self.values)
+
+    def get_reward(self, arm_index, reward):
+        if self.time > self.tau:
+            return
+        self.time += 1
+        self.vars[arm_index] = self.counts[arm_index]*(
+            self.vars[arm_index] + (self.means[arm_index] - reward)**2/(self.counts[arm_index] + 1)
+        )/(self.counts[arm_index] + 1)
+        self.means[arm_index] = (
+            self.counts[arm_index]*self.means[arm_index] + reward
+        )/(self.counts[arm_index] + 1)
+        self.counts[arm_index] += 1
+        self.values = MV(self.means, self.vars, self.rho)
+
 
 class newAlgo0(Algorithm):
 

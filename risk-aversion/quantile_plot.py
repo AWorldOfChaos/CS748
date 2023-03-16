@@ -16,12 +16,18 @@ def run_sim(seed, horizon, eta, algorithm):
     num_arms = int(eta * horizon)
     rho = 0
     arms = [GaussianBanditArm() for i in range(num_arms)]
-    quantile = 0.9
-    m = sorted([MV(arm.mean,arm.variance,rho) for arm in arms], reverse = True)[int(num_arms * quantile)]
+    quantile = 0.1
+    m = sorted([MV(arm.mean,arm.variance,rho) for arm in arms])[int(num_arms * quantile)]
 
     if algorithm == 'MVLCB':
         alg = MVLCB(num_arms,horizon,rho)
     elif algorithm == 'ExpExp':
+        alg = ExpExp(num_arms,horizon,rho,(int)(((horizon/14)**(2/3))*10))
+    elif algorithm == 'ExpExpSS':
+        C = 1
+        alpha = 0.3
+        # horizon = 2 * ((C/quantile)**3 / 196)**(1/alpha)
+        num_arms = int(C/quantile * (horizon**(1/3-alpha))+1)
         alg = ExpExp(num_arms,horizon,rho,(int)(((horizon/14)**(2/3))*10))
     elif algorithm == 'newAlgo0':
         alg = newAlgo0(num_arms,horizon,rho)
@@ -57,37 +63,53 @@ if __name__ == '__main__':
 
     horizon_list = [int(h) for h in args.horizon.strip().split(',')]
     eta_list = [float(e) for e in args.eta.strip().split(',')]
-    for eta in tqdm(eta_list):
+    for eta in eta_list:
         regret_list = []
-        for horizon in tqdm(horizon_list):
+        for horizon in horizon_list:
             with Pool() as pool:
                 regret = pool.starmap(run_sim, zip(seeds, repeat(horizon), repeat(eta), repeat(args.algorithm)))
             regret_list.append(sum(regret) / len(seeds))
-            print(f'Horizon: {horizon} | Regret: {regret_list[-1]}\n')
+            print(f'Horizon: {horizon} | Regret: {regret_list[-1]}')
         plt.xlabel('Horizon')
-        plt.ylabel('Mean Regret')
+        plt.ylabel('Quantile Regret')
+        # plt.plot(horizon_list,regret_list,'.-',label=f'eta={eta}')
         plt.plot(horizon_list,regret_list,'.-',label=args.algorithm)
-    for eta in tqdm(eta_list):
+
+    for eta in eta_list:
         regret_list = []
-        for horizon in tqdm(horizon_list):
+        for horizon in horizon_list:
+            with Pool() as pool:
+                regret = pool.starmap(run_sim, zip(seeds, repeat(horizon), repeat(eta), repeat('newAlgo2')))
+            regret_list.append(sum(regret) / len(seeds))
+            print(f'Horizon: {horizon} | Regret: {regret_list[-1]}')
+        plt.xlabel('Horizon')
+        plt.ylabel('Quantile Regret')
+        # plt.plot(horizon_list,regret_list,'.-',label=f'eta={eta}')
+        plt.plot(horizon_list,regret_list,'.-',label='newAlgo2')
+
+    for eta in eta_list:
+        regret_list = []
+        for horizon in horizon_list:
             with Pool() as pool:
                 regret = pool.starmap(run_sim, zip(seeds, repeat(horizon), repeat(eta), repeat('ExpExp')))
             regret_list.append(sum(regret) / len(seeds))
             print(f'Horizon: {horizon} | Regret: {regret_list[-1]}')
         plt.xlabel('Horizon')
-        plt.ylabel('Mean Regret')
+        plt.ylabel('Quantile Regret')
         plt.plot(horizon_list,regret_list,'.-',label='ExpExp')
-    for eta in tqdm(eta_list):
+
+    for eta in eta_list:
         regret_list = []
-        for horizon in tqdm(horizon_list):
+        for horizon in horizon_list:
             with Pool() as pool:
                 regret = pool.starmap(run_sim, zip(seeds, repeat(horizon), repeat(eta), repeat('MVLCB')))
             regret_list.append(sum(regret) / len(seeds))
             print(f'Horizon: {horizon} | Regret: {regret_list[-1]}')
         plt.xlabel('Horizon')
-        plt.ylabel('Mean Regret')
+        plt.ylabel('Quantile Regret')
         plt.plot(horizon_list,regret_list,'.-',label='MVLCB')
     plt.title('Risk Averse: ' + args.algorithm + ' vs ExpExp vs MVLCB')
+    # plt.title('Risk Averse: ' + args.algorithm)
 
     # horizon_list = [int(h) for h in args.horizon.strip().split(',')]
     # eta_list = [float(e) for e in args.eta.strip().split(',')]

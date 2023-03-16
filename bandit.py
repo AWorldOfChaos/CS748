@@ -17,8 +17,8 @@ class UniformBanditArm:
 class GaussianBanditArm:
 
     def __init__(self) -> None:
-        self.mean = np.random.beta(3,3)
-        self.variance = np.random.beta(3,3) / 16
+        self.mean = np.random.beta(4,20)
+        self.variance = np.random.beta(20,4) / 16
 
     def pull_arm(self):
         return np.random.normal(self.mean, math.sqrt(self.variance))
