@@ -423,3 +423,76 @@ class newAlgo2(Algorithm):
         self.values = (MV(self.means, self.vars, self.rho) * (self.counts > 0) +
                        np.ones(self.num_arms)*self.margin * (self.counts == 0))
         self.net_reward += reward
+
+class SimExpExpSS(Algorithm):
+
+    def __init__(self, K, horizon, num_arms, rho, tau):
+        super().__init__(num_arms, horizon)
+        self.counts = np.zeros(num_arms)
+        self.means = np.zeros(num_arms)
+        self.vars = np.zeros(num_arms)
+        self.values = np.ones(num_arms)
+        self.time = 0
+        self.tau = tau
+        self.rho = rho
+        self.K = K
+        self.horizon = horizon
+
+    def give_pull(self):
+        if self.time <= self.tau:
+            return np.random.randint(self.num_arms)
+        else:
+            return np.argmin(self.values)
+
+    def get_reward(self, arm_index, reward):
+        if self.time > self.tau:
+            return
+        self.time += 1
+        self.vars[arm_index] = self.counts[arm_index]*(
+            self.vars[arm_index] + (self.means[arm_index] - reward)**2/(self.counts[arm_index] + 1)
+        )/(self.counts[arm_index] + 1)
+        self.means[arm_index] = (
+            self.counts[arm_index]*self.means[arm_index] + reward
+        )/(self.counts[arm_index] + 1)
+        self.counts[arm_index] += 1
+        self.values = MV(self.means, self.vars, self.rho)
+
+    def simulate(self, mean_reward, var_reward, count):
+        total = 0
+        for _ in range(self.horizon):
+            index = self.give_pull()
+            reward = self.K[index].pull_arm()
+            var_reward = count*(var_reward + (mean_reward - reward)**2/(count + 1))/(count + 1)
+            mean_reward = (count*mean_reward + reward)/(count + 1)
+            count += 1
+            self.get_reward(index,reward)
+            total += reward
+        return total, mean_reward, var_reward, count
+
+class newAlgo3(Algorithm):
+
+    def __init__(self, A, prob_over_arms, alpha, num_arms, horizon, rho):
+        super().__init__(num_arms, horizon)
+        self.time = 1
+        self.A = A
+        self.K = []
+        self.alpha = alpha
+        self.idx = np.arange(num_arms)
+        self.prob = prob_over_arms
+        self.horizon = horizon
+        self.rho = rho
+
+    def simulate(self):
+        reward = 0
+        count = 0
+        mean_reward = 0
+        var_reward = 0
+        while self.horizon>0:
+            self.time = min(2*self.time, self.horizon)
+            self.horizon -= self.time
+            self.n = math.ceil(math.pow(self.time,self.alpha))
+            self.K = np.random.choice(self.A,self.n,self.prob)
+            M = SimExpExpSS(self.K, self.time, len(self.K), self.rho, (int)(((self.time/14)**(2/3))*10))
+            sim_reward, mean_reward, var_reward, count = M.simulate(mean_reward, var_reward, count)
+            reward += sim_reward
+        return reward, mean_reward, var_reward

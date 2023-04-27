@@ -28,7 +28,16 @@ def run_sim(seed, horizon, eta, algorithm):
         alpha = 0.3
         # horizon = 2 * ((C/quantile)**3 / 196)**(1/alpha)
         num_arms = int(C/quantile * (horizon**(1/3-alpha))+1)
-        alg = ExpExp(num_arms,horizon,rho,(int)(((horizon/14)**(2/3))*10))
+        alg = ExpExpSS(num_arms,horizon,rho,(int)(((horizon/14)**(2/3))*10))
+        
+        mean_reward = 0
+        var_reward = 0
+        count = 0
+        alpha = 0.347
+        prob = np.random.beta(5,7,num_arms).tolist()
+        alg = SimExpExpSS(arms,horizon,num_arms,rho,(int)(((horizon/14)**(2/3))*10))
+        reward, mean_reward, var_reward, count = alg.simulate(mean_reward, var_reward, count)
+        return (MV(mean_reward,var_reward,rho) - m)
     elif algorithm == 'newAlgo0':
         alg = newAlgo0(num_arms,horizon,rho)
     elif algorithm == 'newAlgo1':
@@ -36,6 +45,12 @@ def run_sim(seed, horizon, eta, algorithm):
     elif algorithm == 'newAlgo2':
         eps = 0.1
         alg = newAlgo2(num_arms,horizon,rho,eps,quantile)
+    elif algorithm == 'newAlgo3':
+        alpha = 0.347
+        prob = np.random.beta(5,7,num_arms).tolist()
+        alg = newAlgo3(arms,prob,alpha,num_arms,horizon,rho)
+        reward, mean_reward, var_reward = alg.simulate()
+        return (MV(mean_reward,var_reward,rho) - m)
 
     mean_reward = 0
     count = 0
@@ -79,13 +94,13 @@ if __name__ == '__main__':
         regret_list = []
         for horizon in horizon_list:
             with Pool() as pool:
-                regret = pool.starmap(run_sim, zip(seeds, repeat(horizon), repeat(eta), repeat('newAlgo2')))
+                regret = pool.starmap(run_sim, zip(seeds, repeat(horizon), repeat(eta), repeat('ExpExpSS')))
             regret_list.append(sum(regret) / len(seeds))
             print(f'Horizon: {horizon} | Regret: {regret_list[-1]}')
         plt.xlabel('Horizon')
         plt.ylabel('Quantile Regret')
         # plt.plot(horizon_list,regret_list,'.-',label=f'eta={eta}')
-        plt.plot(horizon_list,regret_list,'.-',label='newAlgo2')
+        plt.plot(horizon_list,regret_list,'.-',label='ExpExpSS')
 
     for eta in eta_list:
         regret_list = []
