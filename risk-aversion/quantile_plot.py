@@ -28,16 +28,7 @@ def run_sim(seed, horizon, eta, algorithm):
         alpha = 0.3
         # horizon = 2 * ((C/quantile)**3 / 196)**(1/alpha)
         num_arms = int(C/quantile * (horizon**(1/3-alpha))+1)
-        alg = ExpExpSS(num_arms,horizon,rho,(int)(((horizon/14)**(2/3))*10))
-        
-        mean_reward = 0
-        var_reward = 0
-        count = 0
-        alpha = 0.347
-        prob = np.random.beta(5,7,num_arms).tolist()
-        alg = SimExpExpSS(arms,horizon,num_arms,rho,(int)(((horizon/14)**(2/3))*10))
-        reward, mean_reward, var_reward, count = alg.simulate(mean_reward, var_reward, count)
-        return (MV(mean_reward,var_reward,rho) - m)
+        alg = ExpExpSS(num_arms,horizon,rho,(int)(((horizon/14)**(2/3))*num_arms))
     elif algorithm == 'newAlgo0':
         alg = newAlgo0(num_arms,horizon,rho)
     elif algorithm == 'newAlgo1':
